@@ -1,0 +1,6 @@
+{
+  "ZoneId": "123abc123abc123abc123abc123abc12",
+  "ApiToken": "123abc123abc123abc123abc123abc123abc123a",
+  "Domains": [ "git.mydomain.org", "mydomain.org" ],
+  "FrequencyToCheckInMinutes": 120
+}
