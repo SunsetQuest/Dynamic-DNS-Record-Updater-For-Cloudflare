@@ -23,7 +23,7 @@ This tool periodically checks your external IP address and updates specified DNS
 1. **Clone the Repository**
 
    ```shell
-   git clone https://github.com/yourusername/dynamic-dns-cloudflare.git
+   git clone https://github.com/SunsetQuest/Dynamic-DNS-Record-Updater-For-CloudFlare
    cd dynamic-dns-cloudflare
    ```
 
@@ -45,7 +45,7 @@ You need a Cloudflare API token with the following permissions:
 
 **Steps to Create an API Token:**
 
-1. Log in to your Cloudflare dashboard.
+1. Log in to your Cloudflare dashboard
 2. Navigate to **My Profile** > **API Tokens**.
 3. Click on **Create Token**.
 4. Use the **Edit DNS Zone** template or create a custom token with **Zone - DNS - Edit** permissions.
@@ -61,7 +61,7 @@ Create a `config.json` file in the application directory or a custom location.
 ```json
 {
   "ZoneId": "your_zone_id",
-  "ApiToken": "your_api_token", // Optional: It's recommended to use the environment variable instead
+  "ApiToken": "your_api_token", // Optional: It's recommended to use the environment variable for better security
   "Domains": [ "yourdomain.com", "subdomain.yourdomain.com" ],
   "FrequencyToCheckInMinutes": 120
 }
