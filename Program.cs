@@ -159,7 +159,7 @@ public class Program
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reading configuration file.");
+                _logger.LogError(ex, "Error reading 'config.json'.");
                 return null;
             }
         }
@@ -176,19 +176,43 @@ public class Program
 
         if (string.IsNullOrEmpty(config.ZoneId))
         {
-            _logger.LogError("ZoneId is missing in configuration.");
+            _logger.LogError("ZoneId is missing in 'config.json'.");
+            isValid = false;
+        }
+
+        if (config.ZoneId == "123abc123abc123abc123abc123abc12")
+        {
+            _logger.LogError("The 'config.json' has not been updated yet. Please add your ZoneId from the Cloudflare dashboard.");
+            isValid = false;
+        }
+
+        if (config.ZoneId.Length != 32)
+        {
+            _logger.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 32 digit hexadecimal digits. Please add your ZoneId from the Cloudflare dashboard.");
             isValid = false;
         }
 
         if (string.IsNullOrEmpty(config.ApiToken))
         {
-            _logger.LogError("ApiToken is missing in configuration.");
+            _logger.LogError("ApiToken is missing in 'config.json'.");
+            isValid = false;
+        }
+
+        if (config.ApiToken == "123abc123abc123abc123abc123abc123abc123a")
+        {
+            _logger.LogError("The 'config.json' has not been updated yet. Please generate the correct Cloudflare API token.");
+            isValid = false;
+        }
+
+        if (config.ApiToken.Length != 40)
+        {
+            _logger.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 40 digit hexadecimal digits. Please generate the correct Cloudflare API token.");
             isValid = false;
         }
 
         if (config.Domains == null || config.Domains.Count == 0)
         {
-            _logger.LogError("Domains list is missing or empty in configuration.");
+            _logger.LogError("Domains list is missing or empty in 'config.json'. There should be at least one domain.");
             isValid = false;
         }
 
