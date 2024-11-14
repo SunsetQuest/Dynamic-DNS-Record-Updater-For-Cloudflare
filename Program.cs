@@ -1,11 +1,11 @@
-﻿// Dynamic DNS Record Updater for CloudFlare
+﻿// Dynamic DNS Record Updater for Cloudflare
 // License: MIT license
 // This tool was created to automatically update DNS records.
 // Created by ChatGPT and Ryan Scott White 
 
 // Instructions:
 //   1. create an apiToken with the required permissions 
-//   2. set the zoneID, apiToken, domains list, and frequency in the config.json file
+//   2. set the zoneID, apiToken, domains list, and frequency in config.json
 
 using Microsoft.Extensions.Logging;  // Install-Package Microsoft.Extensions.Logging.Console
 using Newtonsoft.Json;
@@ -114,7 +114,7 @@ public class Program
                     continue;
                 }
 
-                string dnsRecordIp = await GetCloudFlareDnsRecordIpAsync(client, config.ZoneId, dnsRecordId);
+                string dnsRecordIp = await GetCloudflareDnsRecordIpAsync(client, config.ZoneId, dnsRecordId);
 
                 if (string.IsNullOrEmpty(dnsRecordIp))
                 {
@@ -128,7 +128,7 @@ public class Program
                     _logger.LogInformation("DNS Record IP: {DnsRecordIp}", dnsRecordIp);
                     _logger.LogInformation("External IP: {ExternalIp}", newExternalIP);
 
-                    bool updateSuccess = await UpdateCloudFlareDnsRecordAsync(client, config.ZoneId, dnsRecordId, newExternalIP, domain);
+                    bool updateSuccess = await UpdateCloudflareDnsRecordAsync(client, config.ZoneId, dnsRecordId, newExternalIP, domain);
 
                     _logger.LogInformation("{{Domain}} DNS record update Success: {UpdateSuccess}.", domain, updateSuccess);
                 }
@@ -253,7 +253,7 @@ public class Program
         }
     }
 
-    private static async Task<string> GetCloudFlareDnsRecordIpAsync(HttpClient client, string zoneId, string dnsRecordId)
+    private static async Task<string> GetCloudflareDnsRecordIpAsync(HttpClient client, string zoneId, string dnsRecordId)
     {
         string url = $"https://api.cloudflare.com/client/v4/zones/{zoneId}/dns_records/{dnsRecordId}";
 
@@ -282,7 +282,7 @@ public class Program
         }
     }
 
-    private static async Task<bool> UpdateCloudFlareDnsRecordAsync(HttpClient client, string zoneId, string dnsRecordId, string newIp, string domain)
+    private static async Task<bool> UpdateCloudflareDnsRecordAsync(HttpClient client, string zoneId, string dnsRecordId, string newIp, string domain)
     {
         string url = $"https://api.cloudflare.com/client/v4/zones/{zoneId}/dns_records/{dnsRecordId}";
 
