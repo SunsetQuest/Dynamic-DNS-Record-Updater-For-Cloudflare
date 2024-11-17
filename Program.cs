@@ -13,6 +13,8 @@ using Newtonsoft.Json.Linq; // Install-Package Newtonsoft.Json
 using System.Net.Http.Headers;
 using System.Text;
 
+namespace DynamicDNSRecordUpdaterForCloudflare;
+
 public class Configuration
 {
     public required string ZoneId { get; set; }
