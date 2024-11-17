@@ -55,21 +55,21 @@ public class Program
         }
 
         // Load configuration from file
-        Configuration config = LoadConfiguration(configFilePath);
+        Configuration? config = LoadConfiguration(configFilePath);
 
         // Validate configuration
         if (config == null || !ValidateConfiguration(config))
         {
-            _logger.LogError("Configuration is missing or invalid. Exiting application.");
+            _logger?.LogError("Configuration is missing or invalid. Exiting application.");
             return;
         }
 
         // Override ApiToken with environment variable if set
-        string envApiToken = Environment.GetEnvironmentVariable("CF_API_TOKEN");
+        string? envApiToken = Environment.GetEnvironmentVariable("CF_API_TOKEN");
         if (!string.IsNullOrEmpty(envApiToken))
         {
             config.ApiToken = envApiToken;
-            _logger.LogInformation("ApiToken loaded from environment variable.");
+            _logger?.LogInformation("ApiToken loaded from environment variable.");
         }
 
         // Main loop
@@ -78,7 +78,7 @@ public class Program
         {
             if (lastExternalIP != "")
             {
-                _logger.LogInformation("Waiting {Minutes} minutes.", config.FrequencyToCheckInMinutes);
+                _logger?.LogInformation("Waiting {Minutes} minutes.", config.FrequencyToCheckInMinutes);
                 await Task.Delay(TimeSpan.FromMinutes(config.FrequencyToCheckInMinutes));
             }
 
@@ -90,14 +90,14 @@ public class Program
             string newExternalIP = await GetExternalIPAddressAsync();
             if (string.IsNullOrEmpty(newExternalIP))
             {
-                _logger.LogWarning("Failed to get external IP address.");
+                _logger?.LogWarning("Failed to get external IP address.");
                 continue;
             }
 
             // Check if IP has changed
             if (lastExternalIP == newExternalIP)
             {
-                _logger.LogInformation("No changes detected in external IP ({IP}).", lastExternalIP);
+                _logger?.LogInformation("No changes detected in external IP ({IP}).", lastExternalIP);
                 continue;
             }
             lastExternalIP = newExternalIP;
@@ -105,12 +105,12 @@ public class Program
             // Check each domain
             foreach (string domain in config.Domains)
             {
-                _logger.LogInformation("Checking {Domain} to ensure it matches {IP}.", domain, newExternalIP);
+                _logger?.LogInformation("Checking {Domain} to ensure it matches {IP}.", domain, newExternalIP);
 
                 string dnsRecordId = await GetDnsRecordIdByNameAsync(client, config.ZoneId, domain);
                 if (string.IsNullOrEmpty(dnsRecordId))
                 {
-                    _logger.LogWarning("Failed to get DNS Record ID for domain ({Domain}).", domain);
+                    _logger?.LogWarning("Failed to get DNS Record ID for domain ({Domain}).", domain);
                     continue;
                 }
 
@@ -118,23 +118,23 @@ public class Program
 
                 if (string.IsNullOrEmpty(dnsRecordIp))
                 {
-                    _logger.LogWarning("Failed to get IP address from DNS Record ID.");
+                    _logger?.LogWarning("Failed to get IP address from DNS Record ID.");
                     continue;
                 }
 
                 if (newExternalIP != dnsRecordIp)
                 {
-                    _logger.LogInformation("IP addresses do not match. Updating DNS record...");
-                    _logger.LogInformation("DNS Record IP: {DnsRecordIp}", dnsRecordIp);
-                    _logger.LogInformation("External IP: {ExternalIp}", newExternalIP);
+                    _logger?.LogInformation("IP addresses do not match. Updating DNS record...");
+                    _logger?.LogInformation("DNS Record IP: {DnsRecordIp}", dnsRecordIp);
+                    _logger?.LogInformation("External IP: {ExternalIp}", newExternalIP);
 
                     bool updateSuccess = await UpdateCloudflareDnsRecordAsync(client, config.ZoneId, dnsRecordId, newExternalIP, domain);
 
-                    _logger.LogInformation("{{Domain}} DNS record update Success: {UpdateSuccess}.", domain, updateSuccess);
+                    _logger?.LogInformation("{Domain} DNS record update Success: {UpdateSuccess}.", domain, updateSuccess);
                 }
                 else
                 {
-                    _logger.LogInformation("{Domain} IP address matches. No update needed.", domain);
+                    _logger?.LogInformation("{Domain} IP address matches. No update needed.", domain);
                 }
             }
         }
@@ -147,7 +147,11 @@ public class Program
             try
             {
                 string jsonConfig = File.ReadAllText(filePath);
-                Configuration config = JsonConvert.DeserializeObject<Configuration>(jsonConfig);
+                if (JsonConvert.DeserializeObject<Configuration>(jsonConfig) is not Configuration config)
+                {
+                    _logger?.LogError("Error reading 'config.json'.");
+                    return null;
+                }
 
                 // Set default frequency if not specified
                 if (config.FrequencyToCheckInMinutes <= 0)
@@ -159,13 +163,13 @@ public class Program
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reading 'config.json'.");
+                _logger?.LogError(ex, "Error reading 'config.json'.");
                 return null;
             }
         }
         else
         {
-            _logger.LogError("Configuration file not found: {FilePath}", filePath);
+            _logger?.LogError("Configuration file not found: {FilePath}", filePath);
             return null;
         }
     }
@@ -176,43 +180,43 @@ public class Program
 
         if (string.IsNullOrEmpty(config.ZoneId))
         {
-            _logger.LogError("ZoneId is missing in 'config.json'.");
+            _logger?.LogError("ZoneId is missing in 'config.json'.");
             isValid = false;
         }
 
         if (config.ZoneId == "123abc123abc123abc123abc123abc12")
         {
-            _logger.LogError("The 'config.json' has not been updated yet. Please add your ZoneId from the Cloudflare dashboard.");
+            _logger?.LogError("The 'config.json' has not been updated yet. Please add your ZoneId from the Cloudflare dashboard.");
             isValid = false;
         }
 
         if (config.ZoneId.Length != 32)
         {
-            _logger.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 32 digit hexadecimal digits. Please add your ZoneId from the Cloudflare dashboard.");
+            _logger?.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 32 digit hexadecimal digits. Please add your ZoneId from the Cloudflare dashboard.");
             isValid = false;
         }
 
         if (string.IsNullOrEmpty(config.ApiToken))
         {
-            _logger.LogError("ApiToken is missing in 'config.json'.");
+            _logger?.LogError("ApiToken is missing in 'config.json'.");
             isValid = false;
         }
 
         if (config.ApiToken == "123abc123abc123abc123abc123abc123abc123a")
         {
-            _logger.LogError("The 'config.json' has not been updated yet. Please generate the correct Cloudflare API token.");
+            _logger?.LogError("The 'config.json' has not been updated yet. Please generate the correct Cloudflare API token.");
             isValid = false;
         }
 
         if (config.ApiToken.Length != 40)
         {
-            _logger.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 40 digit hexadecimal digits. Please generate the correct Cloudflare API token.");
+            _logger?.LogError("The ZoneId field in the 'config.json' does not appear correct. It should be a 40 digit hexadecimal digits. Please generate the correct Cloudflare API token.");
             isValid = false;
         }
 
         if (config.Domains == null || config.Domains.Count == 0)
         {
-            _logger.LogError("Domains list is missing or empty in 'config.json'. There should be at least one domain.");
+            _logger?.LogError("Domains list is missing or empty in 'config.json'. There should be at least one domain.");
             isValid = false;
         }
 
@@ -225,10 +229,10 @@ public class Program
         try
         {
             string ipAddress = (await client.GetStringAsync("https://api.ipify.org")).Trim();
-            bool isValidIP = System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress ip) && ip.ToString() == ipAddress;
+            bool isValidIP = System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? ip) && ip.ToString() == ipAddress;
             if (!isValidIP)
             {
-                _logger.LogWarning("Invalid IP address received: {IPAddress}", ipAddress);
+                _logger?.LogWarning("Invalid IP address received: {IPAddress}", ipAddress);
                 ipAddress = "";
             }
 
@@ -236,7 +240,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting external IP address.");
+            _logger?.LogError(ex, "Error getting external IP address.");
             return "";
         }
     }
@@ -252,13 +256,13 @@ public class Program
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Error fetching DNS Record ID. Status Code: {StatusCode}", response.StatusCode);
-                _logger.LogError("Response Content: {Content}", content);
+                _logger?.LogError("Error fetching DNS Record ID. Status Code: {StatusCode}", response.StatusCode);
+                _logger?.LogError("Response Content: {Content}", content);
                 return "";
             }
 
             JObject dnsRecords = JObject.Parse(content);
-            JArray resultArray = (JArray)dnsRecords["result"];
+            JArray? resultArray = (JArray?)dnsRecords["result"];
 
             if (resultArray != null && resultArray.Count > 0)
             {
@@ -267,12 +271,12 @@ public class Program
                 return dnsRecordId;
             }
 
-            _logger.LogWarning("DNS record not found for {RecordName}.", recordName);
+            _logger?.LogWarning("DNS record not found for {RecordName}.", recordName);
             return "";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving DNS Record ID.");
+            _logger?.LogError(ex, "Error retrieving DNS Record ID.");
             return "";
         }
     }
@@ -288,8 +292,8 @@ public class Program
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Error fetching DNS Record IP. Status Code: {StatusCode}", response.StatusCode);
-                _logger.LogError("Response Content: {Content}", content);
+                _logger?.LogError("Error fetching DNS Record IP. Status Code: {StatusCode}", response.StatusCode);
+                _logger?.LogError("Response Content: {Content}", content);
                 return "";
             }
 
@@ -301,7 +305,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving DNS Record IP.");
+            _logger?.LogError(ex, "Error retrieving DNS Record IP.");
             return "";
         }
     }
@@ -331,8 +335,8 @@ public class Program
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Error updating DNS record. Status Code: {StatusCode}", response.StatusCode);
-                _logger.LogError("Response Content: {Content}", responseContent);
+                _logger?.LogError("Error updating DNS record. Status Code: {StatusCode}", response.StatusCode);
+                _logger?.LogError("Response Content: {Content}", responseContent);
                 return false;
             }
 
@@ -342,7 +346,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating DNS record.");
+            _logger?.LogError(ex, "Error updating DNS record.");
             return false;
         }
     }
